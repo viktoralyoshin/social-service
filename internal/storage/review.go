@@ -53,18 +53,120 @@ func (r *ReviewRepo) CreateReview(ctx context.Context, req *socialpb.CreateRevie
 	return createdReview, nil
 }
 
+func (r *ReviewRepo) GetReviewsByUser(ctx context.Context, req *socialpb.GetUserReviewsRequest) ([]*model.Review, error) {
+	reviews := make([]*model.Review, 0, req.Limit)
+
+	query := `
+		SELECT id, user_id, game_id, rating, text, created_at, updated_at
+		FROM social.reviews
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, req.UserId, req.Limit, req.Offset)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Error().Err(err).Msg("review_repo: failed to close rows")
+		}
+	}()
+
+	for rows.Next() {
+		review := &model.Review{}
+
+		err := rows.Scan(
+			&review.Id,
+			&review.UserID,
+			&review.GameID,
+			&review.Rating,
+			&review.Text,
+			&review.CreatedAt,
+			&review.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		reviews = append(reviews, review)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
+func (r *ReviewRepo) GetFeed(ctx context.Context, req *socialpb.GetFeedRequest) ([]*model.Review, error) {
+	reviews := make([]*model.Review, 0, req.Limit)
+
+	query := `
+		SELECT id, user_id, game_id, rating, text, created_at, updated_at
+		FROM social.reviews
+		ORDER BY created_at DESC
+		LIMIT $1
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, req.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Error().Err(err).Msg("review_repo: failed to close rows")
+		}
+	}()
+
+	for rows.Next() {
+		review := &model.Review{}
+
+		err := rows.Scan(
+			&review.Id,
+			&review.UserID,
+			&review.GameID,
+			&review.Rating,
+			&review.Text,
+			&review.CreatedAt,
+			&review.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		reviews = append(reviews, review)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
 func (r *ReviewRepo) GetReviewsByGame(ctx context.Context, req *socialpb.GetGameReviewsRequest) ([]*model.Review, error) {
 	reviews := make([]*model.Review, 0, req.Limit)
+
+	var limit *int32
+
+	if req.Limit == 0 {
+		limit = nil
+	} else {
+		limit = &req.Limit
+	}
 
 	query := `
 		SELECT id, user_id, game_id, rating, text, created_at, updated_at
 		FROM social.reviews
 		WHERE game_id = $1
 		ORDER BY created_at DESC
-		LIMIT = $2 OFFSET = $3
+		LIMIT $2 OFFSET $3
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, req.GameId, req.Limit, req.Offset)
+	rows, err := r.db.QueryContext(ctx, query, req.GameId, limit, req.Offset)
 	if err != nil {
 		return nil, err
 	}

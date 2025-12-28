@@ -22,6 +22,26 @@ func (s *ReviewService) CreateReview(ctx context.Context, req *socialpb.CreateRe
 	return s.repo.CreateReview(ctx, req)
 }
 
+func (s *ReviewService) GetReviewsByUser(ctx context.Context, req *socialpb.GetUserReviewsRequest) ([]*model.Review, error) {
+	if req.Limit < 0 {
+		req.Limit = 0
+	}
+
+	if req.Offset < 0 {
+		req.Offset = 0
+	}
+
+	return s.repo.GetReviewsByUser(ctx, req)
+}
+
+func (s *ReviewService) GetFeed(ctx context.Context, req *socialpb.GetFeedRequest) ([]*model.Review, error) {
+	if req.Limit < 0 {
+		req.Limit = 0
+	}
+
+	return s.repo.GetFeed(ctx, req)
+}
+
 func (s *ReviewService) GetReviewsByGame(ctx context.Context, req *socialpb.GetGameReviewsRequest) ([]*model.Review, error) {
 	if req.Limit < 0 {
 		req.Limit = 0

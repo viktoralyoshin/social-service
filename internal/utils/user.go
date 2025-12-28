@@ -8,7 +8,7 @@ import (
 )
 
 func GetUserID(ctx context.Context) (string, error) {
-	md, ok := metadata.FromOutgoingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", errs.ErrInvalidMetadata
 	}

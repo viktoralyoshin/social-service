@@ -5,6 +5,8 @@ import (
 	"social-service/internal/config"
 	"social-service/internal/database"
 	"social-service/internal/grpc"
+	"social-service/internal/microservice"
+	"social-service/internal/producer"
 
 	"github.com/rs/zerolog/log"
 )
@@ -31,7 +33,16 @@ func Start(cfg *config.Config) {
 		log.Fatal().Err(err).Str("addr", addr).Msg("failed to listen tcp")
 	}
 
-	s := grpc.Init(db)
+	producer := producer.NewRatingProducer(cfg.KafkaAddr, "review_events")
+	defer func() {
+		if err := producer.Close(); err != nil {
+			log.Error().Err(err).Msg("failed to close kafka producer")
+		}
+	}()
+
+	s := grpc.Init(db, producer)
+
+	microservice.Connect(cfg)
 
 	log.Info().
 		Str("port", cfg.GRPCPort).

@@ -10,6 +10,8 @@ type Config struct {
 	DBName          string
 	GRPCPort        string
 	GameServiceAddr string
+	AuthServiceAddr string
+	KafkaAddr       string
 	Env             string
 }
 
@@ -22,6 +24,8 @@ func Load() *Config {
 		DBPort:          os.Getenv("DB_PORT"),
 		GRPCPort:        os.Getenv("GRPC_PORT"),
 		GameServiceAddr: os.Getenv("GAME_SERVICE_ADDR"),
+		AuthServiceAddr: os.Getenv("AUTH_SERVICE_ADDR"),
 		Env:             os.Getenv("ENV"),
+		KafkaAddr:       os.Getenv("KAFKA_ADDR"),
 	}
 }
